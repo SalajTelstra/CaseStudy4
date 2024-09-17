@@ -145,7 +145,7 @@ tbody tr:nth-child(odd) {
 .card-header {
   text-align: left; /* Aligns the text to the left side */
   font-weight: bold;
-  padding-left: 0; /* Removes default padding to align perfectly with the left edge */
+  padding-left: 40px; /* Removes default padding to align perfectly with the left edge */
 }
 
 .card h5 {
