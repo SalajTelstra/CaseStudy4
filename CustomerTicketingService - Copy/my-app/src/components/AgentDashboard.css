@@ -103,7 +103,11 @@ body {
     margin-top: 20px; /* Adjust as needed */
     margin-left: 40px;
   }
-  
+
+  .dropdown-container{
+    margin-left: 4%;
+  }
+
   .search-input {
     flex-grow: 1;
     padding: 10px;
