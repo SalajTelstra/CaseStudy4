@@ -158,6 +158,7 @@ const AgentDashboard = () => {
             ))}
           </select>
         </div>
+        <br></br>
 
         {/* All Tickets Section */}
         <div id="all-tickets" className="card">
