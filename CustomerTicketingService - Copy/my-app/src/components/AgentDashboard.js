@@ -124,7 +124,7 @@ const AgentDashboard = () => {
 
       <main className="main-content">
         <div className="header">
-          <h4>Agent Home Page</h4>
+          <h2>Agent Home Page</h2>
           <div className="btn-toolbar">
           <button className="logout-button" onClick={handleLogout}>Logout</button>
           </div>
@@ -165,6 +165,7 @@ const AgentDashboard = () => {
           <div className="card-header">
             <h5>All Tickets</h5>
           </div>
+          <br></br>
           <div className="table-container">
             <table className="table">
               <thead>
