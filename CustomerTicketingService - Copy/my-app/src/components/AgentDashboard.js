@@ -5,21 +5,18 @@ import api from '../api'; // Ensure this is correctly configured for your API
 import { UserContext } from "../UserContext";
 import TicketModal from './TicketModal';
 
-// Main Dashboard Component
 const AgentDashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTicket, setSelectedTicket] = useState(null); // New state for selected ticket
-  const [showModal, setShowModal] = useState(false); // State to control the modal
-
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  
   const { user, ready } = useContext(UserContext);
   const navigate = useNavigate();
 
-  // Define category order
   const categoryOrder = {
     'Technical': 1,
     'Billing': 2,
@@ -28,18 +25,14 @@ const AgentDashboard = () => {
     'All': 5
   };
 
-  // Define categories
   const categories = ['All', 'Technical', 'Billing', 'General', 'Product'];
 
   useEffect(() => {
-    // Fetch tickets and sort them by category
     if (!ready) return;
-
     if (!user) {
       navigate('/');
       return;
     }
-
     setLoading(true);
     setError(null);
     fetchTickets();
@@ -51,7 +44,7 @@ const AgentDashboard = () => {
 
   const fetchTickets = async () => {
     try {
-      const response = await api.get(`/tickets/assigned/${user._id}`); // Adjust endpoint as needed
+      const response = await api.get(`/tickets/assigned/${user._id}`);
       const sortedTickets = response.data.sort((a, b) => {
         if (a.category === b.category) return 0;
         return (categoryOrder[a.category] || 999) - (categoryOrder[b.category] || 999);
@@ -70,32 +63,34 @@ const AgentDashboard = () => {
   };
 
   const handleViewTicket = (ticket) => {
-    setSelectedTicket(ticket); 
-    setShowModal(true); 
+    setSelectedTicket(ticket);
+    setShowModal(true);
   };
- 
+
   const handleCloseModal = () => {
     fetchTickets();
-    setShowModal(false); 
-    setSelectedTicket(null); 
+    setShowModal(false);
+    setSelectedTicket(null);
   };
- 
+
   const handleTicketAction = (action) => {
-    console.log(`Ticket action: ${action}`); // Implement your logic for ticket actions here
-    handleCloseModal(); // Close the modal after action
+    // Logic to handle the ticket action, e.g., update ticket status
+    handleCloseModal(); 
   };
- 
+
   const handleLogout = () => {
     sessionStorage.clear();
     navigate('/');
-};
+  };
 
   const filteredTickets = tickets.filter(ticket => {
     const matchesCategory = selectedCategory === 'All' || ticket.category === selectedCategory;
     const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesSearch && ticket.status !== 'Resolved'; // Exclude resolved tickets
   });
+
+  const resolvedTickets = tickets.filter(ticket => ticket.status === 'Resolved'); // Filter resolved tickets
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
@@ -125,24 +120,21 @@ const AgentDashboard = () => {
       <main className="main-content">
         <div className="header">
           <h2>Agent Home Page</h2>
-          <div className="btn-toolbar">
           <button className="logout-button" onClick={handleLogout}>Logout</button>
-          </div>
         </div>
 
         {/* Search Bar */}
         <div className="search-bar-container">
-          <div className="search-bar">
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search tickets"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-            <button className="search-button">Search</button>
-          </div>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search tickets"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          <button className="search-button">Search</button>
         </div>
+        <br></br>
 
         {/* Category Dropdown */}
         <div className="dropdown-container">
@@ -170,13 +162,13 @@ const AgentDashboard = () => {
             <table className="table">
               <thead>
                 <tr>
-                  <th scope="col">Ticket Number</th>
-                  <th scope="col">Customer Name</th>
-                  <th scope="col">Subject</th>
-                  <th scope="col">Category</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Date Created</th>
-                  <th scope="col" >View Ticket</th> {/* New column */}
+                  <th>Ticket Number</th>
+                  <th>Customer Name</th>
+                  <th>Subject</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Date Created</th>
+                  <th>View Ticket</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,17 +180,13 @@ const AgentDashboard = () => {
                       <td>{ticket.title}</td>
                       <td>{ticket.category}</td>
                       <td>{ticket.status}</td>
-                      <td>{new Date(ticket.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                })}</td>
-                      <td><button className="view-link" onClick={() => handleViewTicket(ticket)}>View</button></td> {/* New view link */}
+                      <td>{new Date(ticket.createdAt).toLocaleDateString('en-US')}</td>
+                      <td><button onClick={() => handleViewTicket(ticket)}>View</button></td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7">No tickets available</td> {/* Handle no tickets case */}
+                    <td colSpan="7">No tickets available</td>
                   </tr>
                 )}
               </tbody>
@@ -206,15 +194,48 @@ const AgentDashboard = () => {
           </div>
         </div>
 
-        {/* Reports Section */}
+        {/* Reports Section - Resolved Tickets */}
         <div id="reports" className="card">
           <div className="card-header">
-            <h5>Reports</h5>
+            <h5>Reports - Resolved Tickets</h5>
           </div>
-          <div className="card-body">
-            <p>No reports available</p>
+          <br></br>
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Ticket Number</th>
+                  <th>Customer Name</th>
+                  <th>Subject</th>
+                  <th>Category</th>
+                  <th>Date Resolved</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resolvedTickets.length > 0 ? (
+                  resolvedTickets.map(ticket => (
+                    <tr key={ticket._id}>
+                      <td>{ticket._id}</td>
+                      <td>{ticket.customer.name}</td>
+                      <td>{ticket.title}</td>
+                      <td>{ticket.category}</td>
+                      <td>{new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                })}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5">No resolved tickets</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
+
         {showModal && (
           <TicketModal
             ticket={selectedTicket}
