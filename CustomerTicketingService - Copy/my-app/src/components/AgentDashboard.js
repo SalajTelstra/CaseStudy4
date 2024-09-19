@@ -13,6 +13,8 @@ const AgentDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [customers, setCustomers] = useState([]); // State for customers
+  const [showCustomers, setShowCustomers] = useState(false); // Toggle customer view
   
   const { user, ready } = useContext(UserContext);
   const navigate = useNavigate();
@@ -58,8 +60,14 @@ const AgentDashboard = () => {
     }
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  const fetchCustomers = async () => {
+    try {
+      const response = await api.get('/customers'); // Fetch customers from the API
+      setCustomers(response.data);
+    } catch (error) {
+      setError('Error fetching customers.');
+      console.error('Error fetching customers:', error);
+    }
   };
 
   const handleViewTicket = (ticket) => {
@@ -74,13 +82,17 @@ const AgentDashboard = () => {
   };
 
   const handleTicketAction = (action) => {
-    // Logic to handle the ticket action, e.g., update ticket status
     handleCloseModal(); 
   };
 
   const handleLogout = () => {
     sessionStorage.clear();
     navigate('/');
+  };
+
+  const handleShowCustomers = () => {
+    setShowCustomers(true);
+    fetchCustomers(); // Fetch customers when clicking the "Customers" link
   };
 
   const filteredTickets = tickets.filter(ticket => {
@@ -108,7 +120,7 @@ const AgentDashboard = () => {
               <a className="nav-link" href="#all-tickets">All Tickets</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#customers">Customers</a>
+              <a className="nav-link" href="#customers" onClick={handleShowCustomers}>Customers</a> {/* Update the click event */}
             </li>
             <li className="nav-item">
               <a className="nav-link" href="#reports">Reports</a>
@@ -130,11 +142,11 @@ const AgentDashboard = () => {
             className="search-input"
             placeholder="Search tickets"
             value={searchTerm}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button className="search-button">Search</button>
         </div>
-        <br></br>
+        <br />
 
         {/* Category Dropdown */}
         <div className="dropdown-container">
@@ -150,14 +162,14 @@ const AgentDashboard = () => {
             ))}
           </select>
         </div>
-        <br></br>
+        <br />
 
         {/* All Tickets Section */}
         <div id="all-tickets" className="card">
           <div className="card-header">
             <h5>All Tickets</h5>
           </div>
-          <br></br>
+          <br />
           <div className="table-container">
             <table className="table">
               <thead>
@@ -199,7 +211,7 @@ const AgentDashboard = () => {
           <div className="card-header">
             <h5>Reports - Resolved Tickets</h5>
           </div>
-          <br></br>
+          <br />
           <div className="table-container">
             <table className="table">
               <thead>
@@ -220,10 +232,10 @@ const AgentDashboard = () => {
                       <td>{ticket.title}</td>
                       <td>{ticket.category}</td>
                       <td>{new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                })}</td>
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}</td>
                     </tr>
                   ))
                 ) : (
@@ -235,6 +247,40 @@ const AgentDashboard = () => {
             </table>
           </div>
         </div>
+
+        {/* Customers Section */}
+        {showCustomers && (
+          <div id="customers" className="card">
+            <div className="card-header">
+              <h5>Customers</h5>
+            </div>
+            <br />
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Customer Name</th>
+                    <th>Ticket Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customers.length > 0 ? (
+                    customers.map(customer => (
+                      <tr key={customer._id}>
+                        <td>{customer.name}</td>
+                        <td>{customer.ticketCount}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="2">No customers available</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {showModal && (
           <TicketModal
